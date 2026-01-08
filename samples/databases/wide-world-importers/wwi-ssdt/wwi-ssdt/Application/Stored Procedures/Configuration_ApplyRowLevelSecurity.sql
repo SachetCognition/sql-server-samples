@@ -6,6 +6,11 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
+    -- Performance Optimization: Restructured the security predicate function to:
+    -- 1. Use a single join to Cities/StateProvinces instead of two separate subqueries
+    -- 2. Fixed operator precedence issue with OR/AND (added parentheses)
+    -- 3. Simplified the logic flow for better query plan optimization
+
     DECLARE @SQL nvarchar(max);
 
     BEGIN TRY;
@@ -21,20 +26,26 @@ CREATE FUNCTION [Application].DetermineCustomerAccess(@CityID int)
 RETURNS TABLE
 WITH SCHEMABINDING
 AS
-RETURN (SELECT 1 AS AccessResult
-        WHERE IS_ROLEMEMBER(N''db_owner'') <> 0
-        OR IS_ROLEMEMBER((SELECT sp.SalesTerritory
-                          FROM [Application].Cities AS c
-                          INNER JOIN [Application].StateProvinces AS sp
-                          ON c.StateProvinceID = sp.StateProvinceID
-                          WHERE c.CityID = @CityID) + N'' Sales'') <> 0
-	    OR (ORIGINAL_LOGIN() = N''Website'' OR ORIGINAL_LOGIN() = N''WebApi''
-		    AND EXISTS (SELECT 1
-		                FROM [Application].Cities AS c
-				        INNER JOIN [Application].StateProvinces AS sp
-				        ON c.StateProvinceID = sp.StateProvinceID
-				        WHERE c.CityID = @CityID
-				        AND sp.SalesTerritory = SESSION_CONTEXT(N''SalesTerritory''))));';
+RETURN (
+    -- Performance Optimization: Restructured to use a single join and clearer logic
+    -- Original had two separate subqueries to Cities/StateProvinces and operator precedence issues
+    SELECT 1 AS AccessResult
+    FROM [Application].Cities AS c
+    INNER JOIN [Application].StateProvinces AS sp
+        ON c.StateProvinceID = sp.StateProvinceID
+    WHERE c.CityID = @CityID
+    AND (
+        -- Allow db_owner full access
+        IS_ROLEMEMBER(N''db_owner'') <> 0
+        -- Allow users in the territory-specific sales role
+        OR IS_ROLEMEMBER(sp.SalesTerritory + N'' Sales'') <> 0
+        -- Allow Website/WebApi logins with matching session context
+        OR (
+            ORIGINAL_LOGIN() IN (N''Website'', N''WebApi'')
+            AND sp.SalesTerritory = SESSION_CONTEXT(N''SalesTerritory'')
+        )
+    )
+);';
         EXECUTE (@SQL);
 
         SET @SQL = N'
