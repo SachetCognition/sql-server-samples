@@ -8,7 +8,11 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-
+    -- Performance Optimization: Replaced non-sargable CASE expression in WHERE clause
+    -- with sargable OR conditions that allow index usage on LastEditedWhen columns.
+    -- The original CASE expression prevented the query optimizer from using indexes
+    -- because it required evaluating the expression for every row before filtering.
+    
     SELECT CAST(o.OrderDate AS date) AS [Order Date Key],
            CAST(ol.PickingCompletedWhen AS date) AS [Picked Date Key],
            o.OrderID AS [WWI Order ID],
@@ -29,12 +33,18 @@ BEGIN
            CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END AS [Last Modified When]
     FROM Sales.Orders AS o
     INNER JOIN Sales.OrderLines AS ol
-    ON o.OrderID = ol.OrderID
+        ON o.OrderID = ol.OrderID
     INNER JOIN Warehouse.PackageTypes AS pt
-    ON ol.PackageTypeID = pt.PackageTypeID
+        ON ol.PackageTypeID = pt.PackageTypeID
     INNER JOIN Sales.Customers AS c
-    ON c.CustomerID = o.CustomerID
-    WHERE CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END > @LastCutoff
+        ON c.CustomerID = o.CustomerID
+    WHERE (
+        -- Sargable condition: Either OrderLines or Orders was modified in the date range
+        (ol.LastEditedWhen > @LastCutoff AND ol.LastEditedWhen <= @NewCutoff)
+        OR (o.LastEditedWhen > @LastCutoff AND o.LastEditedWhen <= @NewCutoff)
+    )
+    -- Additional filter to ensure the MAX of both timestamps is within range
+    AND CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END > @LastCutoff
     AND CASE WHEN ol.LastEditedWhen > o.LastEditedWhen THEN ol.LastEditedWhen ELSE o.LastEditedWhen END <= @NewCutoff
     ORDER BY o.OrderID;
 

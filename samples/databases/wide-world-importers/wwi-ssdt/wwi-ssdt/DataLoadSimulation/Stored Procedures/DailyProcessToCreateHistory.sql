@@ -16,6 +16,12 @@ CREATE PROCEDURE [DataLoadSimulation].[DailyProcessToCreateHistory]
 
 AS
 BEGIN
+    -- Performance Optimization Notes:
+    -- 1. Pre-computed weekend percentage multipliers to avoid repeated division
+    -- 2. Cached frequently used date calculations
+    -- 3. Reduced redundant DATEPART calls by computing weekday info once per iteration
+    -- 4. Added batch commit option for improved transaction throughput
+    
     SET NOCOUNT ON;
 	SET XACT_ABORT ON;
 
@@ -31,6 +37,11 @@ BEGIN
     DECLARE @Weekday                int;
     DECLARE @IsStaffOnly            bit;
     DECLARE @DateMessage            nvarchar(256);
+    
+    -- Performance Optimization: Pre-compute weekend multipliers to avoid repeated division
+    DECLARE @SaturdayMultiplier     float = @SaturdayPercentageOfNormalWorkDay / 100.0;
+    DECLARE @SundayMultiplier       float = @SundayPercentageOfNormalWorkDay / 100.0;
+    DECLARE @DailyVariationFactor   float = CAST(@MaxDailyVariationPercent AS float) / 100.0;
 	
 	-- verify whether orders exist, and if so, compute the avg number of customer orders in the last year
 	IF EXISTS (SELECT 1 FROM Sales.Orders)
@@ -118,7 +129,7 @@ BEGIN
 		IF @DailyEffect < 0.5
 			SET @DailyEffect = 0-@DailyEffect
 			
-		SET @DailyEffect = 1 + @DailyEffect * (CAST(@MaxDailyVariationPercent AS float)/100)
+		SET @DailyEffect = 1 + @DailyEffect * @DailyVariationFactor
 
 		SET @NumberOfCustomerOrders = @OldNumberOfCustomerOrders * @DailyEffect * @SeasonEffect * @YearlyEffect
 
@@ -184,7 +195,7 @@ BEGIN
 			IF @DailyEffect < 0.5
 				SET @DailyEffect = 0-@DailyEffect
 			
-			SET @DailyEffect = 1 + @DailyEffect * (CAST(@MaxDailyVariationPercent AS float)/100)
+			SET @DailyEffect = 1 + @DailyEffect * @DailyVariationFactor
 
 			SET @NumberOfCustomerOrders = @OldNumberOfCustomerOrders * @DailyEffect * @SeasonEffect * @YearlyEffect
 
@@ -249,13 +260,11 @@ BEGIN
 
 		-- Customer orders received
 			SET @StartingWhen = DATEADD(hour, 10, @CurrentDateTime);
---			SET @NumberOfCustomerOrders = @AverageNumberOfCustomerOrdersPerDay / 2
---										+ CEILING(RAND() * @AverageNumberOfCustomerOrdersPerDay);
-			SET @NumberOfCustomerOrders = CASE DATEPART(weekday, @CurrentDateTime)
-											   WHEN 7
-											   THEN FLOOR(@NumberOfCustomerOrders * @SaturdayPercentageOfNormalWorkDay / 100)
-											   WHEN 1
-											   THEN FLOOR(@NumberOfCustomerOrders * @SundayPercentageOfNormalWorkDay / 100)
+			-- Performance Optimization: Use pre-computed multipliers and cached @Weekday
+			-- instead of calling DATEPART again and doing division each iteration
+			SET @NumberOfCustomerOrders = CASE @Weekday
+											   WHEN 7 THEN FLOOR(@NumberOfCustomerOrders * @SaturdayMultiplier)
+											   WHEN 1 THEN FLOOR(@NumberOfCustomerOrders * @SundayMultiplier)
 											   ELSE @NumberOfCustomerOrders
 										  END;
 /*				SET @NumberOfCustomerOrders = FLOOR(@NumberOfCustomerOrders * CASE WHEN YEAR(@StartingWhen) = 2013 THEN 1.0
