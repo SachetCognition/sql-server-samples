@@ -1,0 +1,475 @@
+Changed database context to 'LendingClub'.
+============================================================================
+LENDINGCLUB DATABASE - DATA QUALITY ANALYSIS REPORT
+Generated: 2026-01-08 13:11:48
+============================================================================
+ 
+----------------------------------------------------------------------------
+SECTION 1: TABLE OVERVIEW AND ROW COUNTS
+----------------------------------------------------------------------------
+TableName                                                                                                                        RowCount             TotalSpaceMB         UsedSpaceMB          UnusedSpaceMB       
+-------------------------------------------------------------------------------------------------------------------------------- -------------------- -------------------- -------------------- --------------------
+LoanStats                                                                                                                                      100000                76.76                76.72                  .04
+LoanStatsPredictions                                                                                                                             5000                  .20                  .18                  .02
+LoanStatsStaging                                                                                                                                 1000                  .38                  .34                  .04
+RunTimeStats                                                                                                                                        8                  .07                  .02                  .05
+DataLoadHistory                                                                                                                                     4                  .07                  .02                  .05
+WhatIf                                                                                                                                              1                  .07                  .02                  .05
+LoanPredictionsWhatIf                                                                                                                               0                  .00                  .00                  .00
+models                                                                                                                                              0                  .00                  .00                  .00
+ 
+----------------------------------------------------------------------------
+SECTION 2: PRIMARY KEY AND UNIQUENESS CHECKS
+----------------------------------------------------------------------------
+2.1 Checking for duplicate IDs in LoanStats table...
+ColumnChecked TotalRows   UniqueValues DuplicateCount Status
+------------- ----------- ------------ -------------- ------
+LoanStats.id       100000       100000              0 PASS  
+2.2 Checking member_id uniqueness in LoanStats...
+ColumnChecked       TotalRows   UniqueValues DuplicateCount Status                      
+------------------- ----------- ------------ -------------- ----------------------------
+LoanStats.member_id      100000        99839            161 INFO - Some duplicates exist
+2.3 Top 10 most duplicated member_ids:
+member_id   OccurrenceCount
+----------- ---------------
+   12345678             101
+   92768964               2
+   54555483               2
+   95617828               2
+   13060808               2
+   66786722               2
+   29041456               2
+   62661376               2
+   73522496               2
+   90385483               2
+2.4 Checking uniqueness in LoanStatsStaging...
+ColumnChecked       TotalRows   UniqueValues DuplicateCount Status
+------------------- ----------- ------------ -------------- ------
+LoanStatsStaging.id        1000         1000              0 PASS  
+2.5 Checking uniqueness in LoanStatsPredictions...
+ColumnChecked           TotalRows   UniqueValues DuplicateCount Status                    
+----------------------- ----------- ------------ -------------- --------------------------
+LoanStatsPredictions.id        5000         5000              0 PASS                      
+ 
+----------------------------------------------------------------------------
+SECTION 3: NULL VALUE ANALYSIS
+----------------------------------------------------------------------------
+3.1 Null analysis for critical financial fields:
+ColumnName  TotalRows   NullCount   NullPercentage Status                         
+----------- ----------- ----------- -------------- -------------------------------
+loan_amnt        100000         500            .50 FAIL - Critical field has NULLs
+int_rate         100000         300            .30 FAIL - Critical field has NULLs
+annual_inc       100000         200            .20 WARNING - Income has NULLs     
+installment      100000           0            .00 PASS                           
+dti              100000           0            .00 PASS                           
+loan_status      100000           0            .00 PASS                           
+grade            100000           0            .00 PASS                           
+3.2 Complete null analysis for LoanStats table:
+ColumnName          NullCount  
+------------------- -----------
+emp_title                 38390
+emp_length                    0
+home_ownership                0
+verification_status           0
+purpose                       0
+addr_state                    0
+is_bad                        0
+member_id                     0
+funded_amnt                   0
+funded_amnt_inv               0
+term                          0
+sub_grade                     0
+ 
+----------------------------------------------------------------------------
+SECTION 4: DATA RANGE AND OUTLIER ANALYSIS
+----------------------------------------------------------------------------
+4.1 Loan amount statistics:
+Metric    MinValue    MaxValue    AvgValue    StdDev                   BelowMin    AboveMax    Status                     
+--------- ----------- ----------- ----------- ------------------------ ----------- ----------- ---------------------------
+loan_amnt        1000       39000       19965       11245.409303790597           0           0 PASS                       
+4.2 Interest rate statistics:
+Metric   MinValue                 MaxValue                 AvgValue                 StdDev                   BelowZero   AboveMax    Status                     
+-------- ------------------------ ------------------------ ------------------------ ------------------------ ----------- ----------- ---------------------------
+int_rate                      5.0       29.989999999999998       17.456106519558702       7.2297910260193508           0           0 PASS                       
+4.3 Annual income statistics:
+Metric     MinValue                 MaxValue                 AvgValue                 StdDev                   VeryLowIncome VeryHighIncome Status                             
+---------- ------------------------ ------------------------ ------------------------ ------------------------ ------------- -------------- -----------------------------------
+annual_inc                  20000.0                 499993.0       259805.25628256513        138955.4004811043             0              0 PASS                               
+4.4 DTI (Debt-to-Income) statistics:
+Metric MinValue                 MaxValue                 AvgValue                 StdDev                   NegativeValues Above100    Status                     
+------ ------------------------ ------------------------ ------------------------ ------------------------ -------------- ----------- ---------------------------
+dti                         0.0                    999.0       25.499499899999996       25.951867239892955              0          49 WARNING - Outliers detected
+4.5 Records with extreme outlier values:
+id          loan_amnt   int_rate                 annual_inc               dti                      loan_status                                        Flag             
+----------- ----------- ------------------------ ------------------------ ------------------------ -------------------------------------------------- -----------------
+      78039       35000                     19.5                 493370.0                    999.0 Fully Paid                                         Potential outlier
+      46023       34000       7.6600000000000001                 492578.0                    999.0 Fully Paid                                         Potential outlier
+      62031       12000       29.129999999999999                 487478.0                    999.0 Fully Paid                                         Potential outlier
+      58029       39000                    27.16                 476031.0                    999.0 Fully Paid                                         Potential outlier
+      92046       11000       14.609999999999999                 475289.0                    999.0 Fully Paid                                         Potential outlier
+      72036       19000                     5.96                 467875.0                    999.0 Fully Paid                                         Potential outlier
+      42021        9000       24.100000000000001                 444901.0                    999.0 Fully Paid                                         Potential outlier
+      12006       24000       23.760000000000002                 436227.0                    999.0 Fully Paid                                         Potential outlier
+      10005       14000       15.949999999999999                 427414.0                    999.0 Current                                            Potential outlier
+      96048       21000       5.1799999999999997                 425393.0                    999.0 Late (31-120 days)                                 Potential outlier
+       2001       20000                     12.9                 403907.0                    999.0 Fully Paid                                         Potential outlier
+       6003        4000                    27.59                 389082.0                    999.0 Fully Paid                                         Potential outlier
+      50025       37000                    28.66                 387029.0                    999.0 Late (16-30 days)                                  Potential outlier
+      86043        1000       7.9100000000000001                 378480.0                    999.0 Fully Paid                                         Potential outlier
+      90045       25000       7.5599999999999996                 362655.0                    999.0 Fully Paid                                         Potential outlier
+       4002       39000                    26.16                 348472.0                    999.0 Fully Paid                                         Potential outlier
+      70035        6000       23.370000000000001                 341621.0                    999.0 Fully Paid                                         Potential outlier
+      24012       12000       5.8399999999999999                 336642.0                    999.0 Charged Off                                        Potential outlier
+      82041       12000                    15.32                 332599.0                    999.0 Fully Paid                                         Potential outlier
+      26013        6000       25.530000000000001                 331078.0                    999.0 Fully Paid                                         Potential outlier
+ 
+----------------------------------------------------------------------------
+SECTION 5: CATEGORICAL DATA VALIDATION
+----------------------------------------------------------------------------
+5.1 Grade distribution:
+grade      Count       Percentage
+---------- ----------- ----------
+A                14178      14.18
+B                14485      14.49
+C                14219      14.22
+D                14174      14.17
+E                14290      14.29
+F                14299      14.30
+G                14355      14.36
+5.2 Loan status distribution:
+loan_status                                        Count       Percentage
+-------------------------------------------------- ----------- ----------
+Fully Paid                                               77033      77.03
+Current                                                   7311       7.31
+Charged Off                                               5331       5.33
+Late (31-120 days)                                        3757       3.76
+Default                                                   2955       2.96
+Late (16-30 days)                                         1911       1.91
+In Grace Period                                           1702       1.70
+5.3 Home ownership distribution:
+home_ownership                                     Count       Percentage
+-------------------------------------------------- ----------- ----------
+NONE                                                     41133      41.13
+RENT                                                     19755      19.76
+MORTGAGE                                                 16045      16.05
+OWN                                                      12858      12.86
+OTHER                                                    10209      10.21
+5.4 Verification status distribution:
+verification_status                                Count       Percentage
+-------------------------------------------------- ----------- ----------
+Not Verified                                             44589      44.59
+Verified                                                 33075      33.08
+Source Verified                                          22336      22.34
+5.5 Term distribution:
+term                                               Count       Percentage
+-------------------------------------------------- ----------- ----------
+36 months                                                66385      66.39
+60 months                                                33615      33.62
+5.6 Top 10 states by loan count:
+addr_state Count       Percentage
+---------- ----------- ----------
+CA               54145      54.15
+TX                1976       1.98
+PA                1920       1.92
+NY                1909       1.91
+FL                1868       1.87
+IL                1859       1.86
+GA                1775       1.78
+OH                1753       1.75
+NJ                1661       1.66
+NC                1635       1.64
+ 
+----------------------------------------------------------------------------
+SECTION 6: REFERENTIAL INTEGRITY CHECKS
+----------------------------------------------------------------------------
+6.1 Staging table records not in production (orphaned staging records):
+OrphanedStagingRecords Status                                
+---------------------- --------------------------------------
+                     0 PASS                                  
+6.2 Predictions referencing non-existent loans:
+OrphanedPredictions Status                           
+------------------- ---------------------------------
+                  0 PASS                             
+6.3 WhatIf predictions referencing non-existent loans:
+OrphanedWhatIfPredictions Status                                  
+------------------------- ----------------------------------------
+                        0 PASS                                    
+6.4 Loans without predictions (prediction coverage):
+LoansWithoutPredictions TotalLoans  UncoveredPercentage
+----------------------- ----------- -------------------
+                  95000      100000               95.00
+ 
+----------------------------------------------------------------------------
+SECTION 7: DATA FRESHNESS ANALYSIS
+----------------------------------------------------------------------------
+7.1 Data load history:
+load_id     source_file                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          load_start_time         load_end_time           LoadDurationMinutes rows_loaded status                                            
+----------- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ----------------------- ----------------------- ------------------- ----------- --------------------------------------------------
+          8 LoanStats_2023_Q4.csv                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                2026-01-04 13:09:47.590 2026-01-04 13:22:47.590                  13       25000 Success                                           
+          7 LoanStats_2023_Q3.csv                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                2026-01-03 13:09:47.590 2026-01-03 13:23:47.590                  14       25000 Success                                           
+          6 LoanStats_2023_Q2.csv                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                2026-01-02 13:09:47.590 2026-01-02 13:21:47.590                  12       25000 Success                                           
+          5 LoanStats_2023_Q1.csv                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                2026-01-01 13:09:47.590 2026-01-01 13:24:47.590                  15       25000 Success                                           
+7.2 Data freshness in LoanStats:
+TableName MostRecentRecord        OldestRecord            DaysSinceLastRecord FreshnessStatus            
+--------- ----------------------- ----------------------- ------------------- ---------------------------
+LoanStats 2026-01-08 13:09:46.897 2025-01-09 13:08:58.550                   0 PASS                       
+7.3 Runtime stats freshness:
+TableName    MostRecentOperation     HoursSinceLastOperation Status                        
+------------ ----------------------- ----------------------- ------------------------------
+RunTimeStats 2026-01-08 12:09:57.590                       1 PASS                          
+7.4 Predictions freshness:
+TableName            MostRecentPrediction    HoursSinceLastPrediction Status                            
+-------------------- ----------------------- ------------------------ ----------------------------------
+LoanStatsPredictions 2026-01-08 13:09:47.570                        0 PASS                              
+ 
+----------------------------------------------------------------------------
+SECTION 8: DATA CONSISTENCY CHECKS
+----------------------------------------------------------------------------
+8.1 is_bad flag consistency with loan_status:
+loan_status                                        is_bad      Count       ConsistencyStatus
+-------------------------------------------------- ----------- ----------- -----------------
+Charged Off                                                  1        5331 CONSISTENT       
+Current                                                      0        7311 CONSISTENT       
+Default                                                      1        2955 CONSISTENT       
+Fully Paid                                                   0       77033 CONSISTENT       
+In Grace Period                                              0        1702 CONSISTENT       
+Late (16-30 days)                                            1        1911 CONSISTENT       
+Late (31-120 days)                                           1        3757 CONSISTENT       
+8.2 Funded amount vs loan amount consistency:
+TotalRecords FundedExceedsLoan FundedLessThanHalf Status                                           
+------------ ----------------- ------------------ -------------------------------------------------
+       99500             48699              23445 WARNING - Some funded amounts exceed loan amounts
+8.3 Grade vs sub_grade consistency:
+grade      sub_grade  Count       ConsistencyStatus
+---------- ---------- ----------- -----------------
+A          B1                 426 INCONSISTENT     
+A          C2                 406 INCONSISTENT     
+A          B3                 374 INCONSISTENT     
+A          G4                 432 INCONSISTENT     
+A          C3                 418 INCONSISTENT     
+A          D1                 445 INCONSISTENT     
+A          F3                 386 INCONSISTENT     
+A          B2                 417 INCONSISTENT     
+A          B4                 400 INCONSISTENT     
+A          C5                 441 INCONSISTENT     
+A          G5                 418 INCONSISTENT     
+A          D2                 374 INCONSISTENT     
+A          D4                 409 INCONSISTENT     
+A          C4                 380 INCONSISTENT     
+A          G1                 410 INCONSISTENT     
+A          E2                 394 INCONSISTENT     
+A          B5                 407 INCONSISTENT     
+A          D3                 418 INCONSISTENT     
+A          F2                 424 INCONSISTENT     
+A          E3                 400 INCONSISTENT     
+A          C1                 413 INCONSISTENT     
+A          E4                 392 INCONSISTENT     
+A          D5                 408 INCONSISTENT     
+A          F5                 383 INCONSISTENT     
+A          E1                 402 INCONSISTENT     
+A          F1                 420 INCONSISTENT     
+A          G3                 450 INCONSISTENT     
+A          F4                 398 INCONSISTENT     
+A          E5                 413 INCONSISTENT     
+A          G2                 410 INCONSISTENT     
+B          A4                 407 INCONSISTENT     
+B          G4                 403 INCONSISTENT     
+B          A2                 421 INCONSISTENT     
+B          A1                 419 INCONSISTENT     
+B          C2                 391 INCONSISTENT     
+B          A3                 431 INCONSISTENT     
+B          D1                 403 INCONSISTENT     
+B          A5                 413 INCONSISTENT     
+B          G5                 383 INCONSISTENT     
+B          C5                 415 INCONSISTENT     
+B          F3                 438 INCONSISTENT     
+B          C3                 421 INCONSISTENT     
+B          F2                 433 INCONSISTENT     
+B          C4                 411 INCONSISTENT     
+B          G1                 419 INCONSISTENT     
+B          E2                 436 INCONSISTENT     
+B          D3                 422 INCONSISTENT     
+B          C1                 422 INCONSISTENT     
+B          D2                 371 INCONSISTENT     
+B          D4                 445 INCONSISTENT     
+B          E4                 444 INCONSISTENT     
+B          D5                 397 INCONSISTENT     
+B          F5                 410 INCONSISTENT     
+B          E1                 392 INCONSISTENT     
+B          F1                 410 INCONSISTENT     
+B          G3                 430 INCONSISTENT     
+B          E3                 379 INCONSISTENT     
+B          E5                 398 INCONSISTENT     
+B          F4                 396 INCONSISTENT     
+B          G2                 392 INCONSISTENT     
+C          A4                 443 INCONSISTENT     
+C          A3                 423 INCONSISTENT     
+C          A1                 400 INCONSISTENT     
+C          D1                 433 INCONSISTENT     
+C          B3                 415 INCONSISTENT     
+C          A2                 419 INCONSISTENT     
+C          B1                 386 INCONSISTENT     
+C          A5                 408 INCONSISTENT     
+C          B2                 381 INCONSISTENT     
+C          B4                 388 INCONSISTENT     
+C          G4                 382 INCONSISTENT     
+C          F1                 423 INCONSISTENT     
+C          E2                 408 INCONSISTENT     
+C          D4                 416 INCONSISTENT     
+C          F3                 380 INCONSISTENT     
+C          B5                 399 INCONSISTENT     
+C          G5                 400 INCONSISTENT     
+C          D2                 400 INCONSISTENT     
+C          D5                 389 INCONSISTENT     
+C          G1                 408 INCONSISTENT     
+C          D3                 387 INCONSISTENT     
+C          E3                 436 INCONSISTENT     
+C          F4                 405 INCONSISTENT     
+C          E5                 412 INCONSISTENT     
+C          F5                 413 INCONSISTENT     
+C          E1                 424 INCONSISTENT     
+C          G2                 420 INCONSISTENT     
+C          E4                 390 INCONSISTENT     
+C          F2                 410 INCONSISTENT     
+C          G3                 425 INCONSISTENT     
+D          A3                 413 INCONSISTENT     
+D          A4                 384 INCONSISTENT     
+D          B2                 416 INCONSISTENT     
+D          A5                 422 INCONSISTENT     
+D          F3                 419 INCONSISTENT     
+D          A1                 458 INCONSISTENT     
+D          A2                 376 INCONSISTENT     
+D          B3                 388 INCONSISTENT     
+D          F2                 381 INCONSISTENT     
+D          B4                 436 INCONSISTENT     
+D          C3                 422 INCONSISTENT     
+D          C4                 354 INCONSISTENT     
+D          G1                 387 INCONSISTENT     
+D          B1                 433 INCONSISTENT     
+D          C2                 409 INCONSISTENT     
+D          E3                 413 INCONSISTENT     
+D          G4                 401 INCONSISTENT     
+D          B5                 420 INCONSISTENT     
+D          C5                 431 INCONSISTENT     
+D          G5                 409 INCONSISTENT     
+D          E2                 366 INCONSISTENT     
+D          F1                 416 INCONSISTENT     
+D          F4                 382 INCONSISTENT     
+D          C1                 428 INCONSISTENT     
+D          F5                 394 INCONSISTENT     
+D          E5                 366 INCONSISTENT     
+D          E4                 391 INCONSISTENT     
+D          G2                 414 INCONSISTENT     
+D          E1                 382 INCONSISTENT     
+D          G3                 409 INCONSISTENT     
+E          A2                 394 INCONSISTENT     
+E          B1                 378 INCONSISTENT     
+E          C2                 407 INCONSISTENT     
+E          B3                 386 INCONSISTENT     
+E          A3                 430 INCONSISTENT     
+E          A1                 408 INCONSISTENT     
+E          D1                 396 INCONSISTENT     
+E          A4                 434 INCONSISTENT     
+E          B2                 403 INCONSISTENT     
+E          D4                 407 INCONSISTENT     
+E          F3                 444 INCONSISTENT     
+E          D3                 406 INCONSISTENT     
+E          C3                 421 INCONSISTENT     
+E          B4                 396 INCONSISTENT     
+E          G4                 415 INCONSISTENT     
+E          A5                 426 INCONSISTENT     
+E          F2                 401 INCONSISTENT     
+E          G1                 386 INCONSISTENT     
+E          F1                 421 INCONSISTENT     
+E          D2                 426 INCONSISTENT     
+E          B5                 404 INCONSISTENT     
+E          G5                 427 INCONSISTENT     
+E          C4                 399 INCONSISTENT     
+E          C1                 413 INCONSISTENT     
+E          F4                 395 INCONSISTENT     
+E          C5                 411 INCONSISTENT     
+E          F5                 420 INCONSISTENT     
+E          D5                 410 INCONSISTENT     
+E          G3                 423 INCONSISTENT     
+E          G2                 393 INCONSISTENT     
+F          A4                 414 INCONSISTENT     
+F          B1                 399 INCONSISTENT     
+F          B2                 408 INCONSISTENT     
+F          A5                 408 INCONSISTENT     
+F          A1                 394 INCONSISTENT     
+F          A3                 403 INCONSISTENT     
+F          A2                 412 INCONSISTENT     
+F          B5                 410 INCONSISTENT     
+F          D1                 432 INCONSISTENT     
+F          C3                 405 INCONSISTENT     
+F          G4                 401 INCONSISTENT     
+F          B3                 400 INCONSISTENT     
+F          B4                 424 INCONSISTENT     
+F          E3                 425 INCONSISTENT     
+F          C2                 423 INCONSISTENT     
+F          C1                 415 INCONSISTENT     
+F          D2                 383 INCONSISTENT     
+F          E2                 389 INCONSISTENT     
+F          C4                 400 INCONSISTENT     
+F          D4                 407 INCONSISTENT     
+F          G1                 399 INCONSISTENT     
+F          E4                 383 INCONSISTENT     
+F          G5                 411 INCONSISTENT     
+F          D5                 401 INCONSISTENT     
+F          C5                 405 INCONSISTENT     
+F          E1                 391 INCONSISTENT     
+F          G3                 376 INCONSISTENT     
+F          E5                 435 INCONSISTENT     
+F          D3                 453 INCONSISTENT     
+F          G2                 423 INCONSISTENT     
+G          A4                 358 INCONSISTENT     
+G          B3                 400 INCONSISTENT     
+G          F3                 414 INCONSISTENT     
+G          B2                 405 INCONSISTENT     
+G          A1                 386 INCONSISTENT     
+G          A3                 431 INCONSISTENT     
+G          B1                 392 INCONSISTENT     
+G          A2                 424 INCONSISTENT     
+G          A5                 436 INCONSISTENT     
+G          C4                 443 INCONSISTENT     
+G          C3                 402 INCONSISTENT     
+G          B4                 424 INCONSISTENT     
+G          D2                 389 INCONSISTENT     
+G          D1                 444 INCONSISTENT     
+G          C2                 373 INCONSISTENT     
+G          B5                 422 INCONSISTENT     
+G          C5                 393 INCONSISTENT     
+G          F2                 425 INCONSISTENT     
+G          F4                 417 INCONSISTENT     
+G          D4                 402 INCONSISTENT     
+G          E3                 394 INCONSISTENT     
+G          E2                 443 INCONSISTENT     
+G          C1                 423 INCONSISTENT     
+G          D3                 377 INCONSISTENT     
+G          D5                 421 INCONSISTENT     
+G          F5                 410 INCONSISTENT     
+G          E4                 409 INCONSISTENT     
+G          F1                 414 INCONSISTENT     
+G          E1                 408 INCONSISTENT     
+G          E5                 438 INCONSISTENT     
+ 
+----------------------------------------------------------------------------
+SECTION 9: DATA QUALITY SUMMARY
+----------------------------------------------------------------------------
+9.1 Overall Data Quality Metrics:
+TotalRecords NullLoanAmounts NullInterestRates NullAnnualIncome DuplicateMemberIds ExtremeIncomeOutliers ExtremeDTIOutliers
+------------ --------------- ----------------- ---------------- ------------------ --------------------- ------------------
+      100000             500               300              200                161                     0                 49
+9.2 Data Quality Issues Summary:
+Issue                          AffectedRecords Severity
+------------------------------ --------------- --------
+NULL loan_amnt                             500 HIGH    
+NULL int_rate                              300 HIGH    
+Duplicate member_id                        161 LOW     
+Extreme income outliers (>$1M)               0 MEDIUM  
+Extreme DTI outliers (>100)                 49 MEDIUM  
+NULL annual_inc                            200 MEDIUM  
+ 
+============================================================================
+DATA QUALITY ANALYSIS COMPLETE
+============================================================================
